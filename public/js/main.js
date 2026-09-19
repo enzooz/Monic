@@ -123,6 +123,21 @@
     });
   }
 
+  function mostrarToast(texto) {
+    let toast = document.getElementById("toast-monic");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "toast-monic";
+      toast.className = "toast";
+      toast.setAttribute("role", "status");
+      document.body.appendChild(toast);
+    }
+    toast.textContent = texto;
+    toast.classList.add("visible");
+    clearTimeout(mostrarToast._t);
+    mostrarToast._t = setTimeout(() => toast.classList.remove("visible"), 2000);
+  }
+
   function agregarAlCarrito(producto, talle) {
     const carrito = obtenerCarrito();
     const existente = carrito.find(
@@ -142,6 +157,7 @@
     }
     guardarCarrito(carrito);
     actualizarContador();
+    mostrarToast("Producto agregado al carrito");
     if (window.location.pathname === "/carrito") {
       renderizarCarrito();
     }

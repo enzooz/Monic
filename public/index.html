@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monic Indumentaria</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">Monic</a>
+      <nav class="nav">
+        <a href="/">Catálogo</a>
+        <a href="/carrito" class="carrito-link">
+          Carrito
+          <span class="carrito-contador" id="carrito-contador">0</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Monic Indumentaria</h1>
+      <p>"Venid en pos de mí, y haré que seáis pescadores de hombres"</p>
+      <p>Marcos 1:17</p>
+    </div>
+  </section>
+
+  <section class="seccion">
+    <div class="container">
+      <h2 class="seccion-titulo">Catálogo</h2>
+      <p class="seccion-sub">Elegí tus prendas y agregalas al carrito</p>
+
+      <div class="filtros" id="filtros"></div>
+
+      <div class="grid" id="productos"></div>
+
+      <div class="vacio" id="productos-vacio" style="display:none;">
+        <p>Aún no hay productos disponibles.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <div class="container">© <span id="anio"></span> Monic Indumentaria</div>
+  </footer>
+
+  <div class="modal-fondo" id="modal-fondo">
+    <div class="modal">
+      <h3 id="modal-titulo">Producto</h3>
+      <div id="modal-producto"></div>
+      <div class="modal-acciones">
+        <button class="btn btn-outline" id="modal-cancelar">Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

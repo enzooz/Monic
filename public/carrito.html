@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrito — Monic Indumentaria</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">Monic</a>
+      <nav class="nav">
+        <a href="/">Catálogo</a>
+        <a href="/carrito" class="carrito-link">
+          Carrito
+          <span class="carrito-contador" id="carrito-contador">0</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="seccion">
+    <div class="container">
+      <h2 class="seccion-titulo">Tu carrito</h2>
+      <p class="seccion-sub">Revisá tu selección antes de confirmar</p>
+
+      <div id="mensaje"></div>
+
+      <div id="carrito-contenido">
+        <div class="vacio">
+          <p>Tu carrito está vacío.</p>
+          <br />
+          <a href="/" class="btn btn-outline">Ir al catálogo</a>
+        </div>
+      </div>
+
+      <div id="checkout" style="display:none;">
+        <h3 class="seccion-titulo" style="font-size:1.2rem;">Datos del cliente</h3>
+        <form id="form-pedido">
+          <div class="form-grupo">
+            <label for="nombre">Nombre</label>
+            <input type="text" id="nombre" required placeholder="Nombre y apellido" />
+          </div>
+          <div class="form-grupo">
+            <label for="telefono">Teléfono</label>
+            <input type="tel" id="telefono" required placeholder="11-5555-1234" />
+          </div>
+          <div class="form-grupo">
+            <label for="dni">DNI</label>
+            <input type="text" id="dni" required placeholder="30123456" />
+          </div>
+          <div class="form-grupo honeypot">
+            <label for="website">Website</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" />
+          </div>
+          <button type="submit" class="btn btn-block">Confirmar pedido</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <div class="container">© Monic Indumentaria</div>
+  </footer>
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

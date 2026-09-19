@@ -1,0 +1,23 @@
+{
+  "name": "monic",
+  "version": "1.0.0",
+  "description": "Sitio web de catálogo y pedidos para la indumentaria \"Monic Indumentaria\". Diseño minimalista, enfocado en mostrar productos con imágenes y permitir a los clientes realizar pedidos.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "netlify dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^27.8.0"
+  }
+}

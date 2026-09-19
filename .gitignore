@@ -1,0 +1,24 @@
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+.secret_key
+
+# Node / Netlify
+node_modules/
+.netlify/
+dist/
+
+# Legacy Flask (datos e imágenes locales)
+legacy-flask/datos/
+legacy-flask/img/*
+
+# Sistema
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+.vs/
+
+# Binarios
+*.exe

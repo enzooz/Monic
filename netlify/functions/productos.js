@@ -22,9 +22,10 @@ export default async (req) => {
       nombre,
       categoria: (data.categoria ?? "").trim(),
       precio: Number(data.precio) || 0,
-      talles: Array.isArray(data.talles) ? data.talles : [],
+      talles: Array.isArray(data.talles) ? data.talles.filter(Boolean) : [],
+      colores: Array.isArray(data.colores) ? data.colores.filter(Boolean) : [],
       stock: Number(data.stock) || 0,
-      imagen: (data.imagen ?? "").trim(),
+      imagenes: Array.isArray(data.imagenes) ? data.imagenes.filter(Boolean) : [],
       descripcion: (data.descripcion ?? "").trim(),
     };
     productos.push(producto);

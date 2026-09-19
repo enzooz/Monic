@@ -39,6 +39,7 @@
     <div class="admin-layout">
       <aside class="admin-sidebar">
         <a href="#productos" data-vista="productos" class="activo">Productos</a>
+        <a href="#colores" data-vista="colores">Colores</a>
         <a href="#pedidos" data-vista="pedidos">Pedidos</a>
         <a href="#" id="btn-logout">Cerrar sesión</a>
       </aside>
@@ -58,6 +59,7 @@
                 <th>Precio</th>
                 <th>Stock</th>
                 <th>Talles</th>
+                <th>Colores</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -66,6 +68,27 @@
           <div class="vacio" id="productos-vacio-admin" style="display:none;">
             <p>No hay productos. Agregá el primero.</p>
           </div>
+        </div>
+
+        <div id="vista-colores" style="display:none;">
+          <div class="admin-cabecera">
+            <h2>Colores</h2>
+          </div>
+          <div id="mensaje-colores"></div>
+          <div class="color-form">
+            <div class="form-fila">
+              <div class="form-grupo">
+                <label for="color-nombre">Nombre</label>
+                <input type="text" id="color-nombre" placeholder="Ej. Verde" />
+              </div>
+              <div class="form-grupo">
+                <label for="color-hex">Color</label>
+                <input type="color" id="color-hex" value="#16A34A" />
+              </div>
+            </div>
+            <button class="btn" id="btn-agregar-color">Agregar color</button>
+          </div>
+          <div class="color-lista" id="lista-colores"></div>
         </div>
 
         <div id="vista-pedidos" style="display:none;">
@@ -101,13 +124,12 @@
       <form id="form-producto">
         <input type="hidden" id="producto-id" />
         <div class="form-grupo">
-          <label>Imagen</label>
+          <label>Imágenes</label>
           <div class="upload-zona" id="upload-zona">
-            <span id="upload-texto">Hacé clic para subir una imagen</span>
-            <img id="upload-preview" class="upload-preview" style="display:none;" alt="Vista previa" />
-            <input type="file" id="upload-input" accept="image/*" />
+            <span id="upload-texto">Hacé clic para subir una o varias imágenes</span>
+            <input type="file" id="upload-input" accept="image/*" multiple />
           </div>
-          <input type="hidden" id="producto-imagen" />
+          <div class="upload-lista" id="upload-lista"></div>
         </div>
         <div class="form-grupo">
           <label for="producto-nombre">Nombre *</label>
@@ -133,6 +155,10 @@
             <label for="producto-talles">Talles (separados por coma)</label>
             <input type="text" id="producto-talles" placeholder="S, M, L, XL" />
           </div>
+        </div>
+        <div class="form-grupo">
+          <label>Colores (del palet)</label>
+          <div class="selector-grupo" id="colores-producto"></div>
         </div>
         <div class="form-grupo">
           <label for="producto-descripcion">Descripción</label>

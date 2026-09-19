@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Producto — Monic Indumentaria</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">Monic</a>
+      <nav class="nav">
+        <a href="/">Catálogo</a>
+        <a href="/carrito" class="carrito-link">
+          Carrito
+          <span class="carrito-contador" id="carrito-contador">0</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="seccion">
+    <div class="container">
+      <nav class="miga" id="miga">
+        <a href="/">Catálogo</a>
+        <span id="miga-categoria"></span>
+        <span id="miga-producto"></span>
+      </nav>
+
+      <div id="producto">
+        <div class="producto-vacio">
+          <p>Cargando producto…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <div class="container">© Monic Indumentaria</div>
+  </footer>
+
+  <script src="/js/utils.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

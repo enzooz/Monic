@@ -4,6 +4,7 @@
   let categoriaActiva = "todos";
 
   const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
 
   function obtenerCarrito() {
     try {
@@ -30,9 +31,25 @@
   }
 
   function imagenProducto(p) {
-    return p.imagen
-      ? `<img src="/api/img/${encodeURIComponent(p.imagen)}" alt="${p.nombre}" loading="lazy" onerror="this.parentElement.classList.add('sin-imagen');this.style.display='none';" />`
+    const img = (p.imagenes && p.imagenes[0]) || p.imagen || "";
+    return img
+      ? `<img src="/api/img/${encodeURIComponent(img)}" alt="${escapeHtml(p.nombre)}" loading="lazy" onerror="this.parentElement.classList.add('sin-imagen');this.style.display='none';" />`
       : `<span>Sin imagen</span>`;
+  }
+
+  function mostrarToast(texto) {
+    let toast = document.getElementById("toast-monic");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.id = "toast-monic";
+      toast.className = "toast";
+      toast.setAttribute("role", "status");
+      document.body.appendChild(toast);
+    }
+    toast.textContent = texto;
+    toast.classList.add("visible");
+    clearTimeout(mostrarToast._t);
+    mostrarToast._t = setTimeout(() => toast.classList.remove("visible"), 2000);
   }
 
   async function cargarProductos() {
@@ -78,70 +95,25 @@
     if (vacio) vacio.style.display = "none";
 
     cont.innerHTML = lista.map((p) => {
-      const talles = (p.talles || []).map(
-        (t) =>
-          `<button class="talle-btn" data-talle="${escapeHtml(t)}">${escapeHtml(t)}</button>`
-      ).join("");
+      const img = (p.imagenes && p.imagenes[0]) || p.imagen || "";
       return `
-        <div class="tarjeta" data-id="${p.id}">
-          <div class="tarjeta-imagen ${p.imagen ? "" : "sin-imagen"}">${imagenProducto(p)}</div>
+        <a class="tarjeta-link" href="/producto/${p.id}">
+          <div class="tarjeta-imagen ${img ? "" : "sin-imagen"}">${imagenProducto(p)}</div>
           <div class="tarjeta-categoria">${escapeHtml(p.categoria || "—")}</div>
           <div class="tarjeta-nombre">${escapeHtml(p.nombre)}</div>
           <div class="tarjeta-precio">${formatearPrecio(p.precio)}</div>
-          ${talles ? `<div class="talles" data-talles>${talles}</div>` : ""}
-          <div class="tarjeta-botones">
-            <button class="btn ${p.stock > 0 ? "" : "btn-outline"}" ${p.stock > 0 ? "" : "disabled"}>
-              ${p.stock > 0 ? "Agregar al carrito" : "Sin stock"}
-            </button>
-          </div>
-        </div>`;
+        </a>`;
     }).join("");
-
-    cont.querySelectorAll(".tarjeta").forEach((tarjeta) => {
-      const id = parseInt(tarjeta.dataset.id, 10);
-      const producto = productos.find((p) => p.id === id);
-      let talleSeleccionado = null;
-      const boton = tarjeta.querySelector(".btn");
-
-      const talleBtns = tarjeta.querySelectorAll("[data-talle]");
-      talleBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          talleSeleccionado = btn.dataset.talle;
-          talleBtns.forEach((b) => b.classList.remove("activo"));
-          btn.classList.add("activo");
-        });
-      });
-
-      boton.addEventListener("click", () => {
-        if (producto.stock <= 0) return;
-        if (talleBtns.length > 0 && !talleSeleccionado) {
-          alert("Elegí un talle primero.");
-          return;
-        }
-        agregarAlCarrito(producto, talleSeleccionado);
-      });
-    });
   }
 
-  function mostrarToast(texto) {
-    let toast = document.getElementById("toast-monic");
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "toast-monic";
-      toast.className = "toast";
-      toast.setAttribute("role", "status");
-      document.body.appendChild(toast);
-    }
-    toast.textContent = texto;
-    toast.classList.add("visible");
-    clearTimeout(mostrarToast._t);
-    mostrarToast._t = setTimeout(() => toast.classList.remove("visible"), 2000);
-  }
-
-  function agregarAlCarrito(producto, talle) {
+  function agregarAlCarrito(producto, talle, color) {
     const carrito = obtenerCarrito();
+    const colorHex = color && color.hex ? color.hex : "";
     const existente = carrito.find(
-      (i) => i.producto_id === producto.id && i.talle === (talle || "")
+      (i) =>
+        i.producto_id === producto.id &&
+        i.talle === (talle || "") &&
+        (i.color && i.color.hex ? i.color.hex : "") === colorHex
     );
     if (existente) {
       existente.cantidad += 1;
@@ -149,9 +121,10 @@
       carrito.push({
         producto_id: producto.id,
         talle: talle || "",
+        color: color || null,
         nombre: producto.nombre,
         precio: producto.precio,
-        imagen: producto.imagen,
+        imagen: (producto.imagenes && producto.imagenes[0]) || producto.imagen || "",
         cantidad: 1,
       });
     }
@@ -161,6 +134,11 @@
     if (window.location.pathname === "/carrito") {
       renderizarCarrito();
     }
+  }
+
+  function colorHtml(item) {
+    if (!item.color || !item.color.hex) return "";
+    return `<span class="mini-swatch" style="background:${escapeHtml(item.color.hex)}"></span> ${escapeHtml(item.color.nombre || item.color.hex)}`;
   }
 
   function renderizarCarrito() {
@@ -188,6 +166,7 @@
           <div class="item-info">
             <div class="nombre">${escapeHtml(item.nombre)}</div>
             <div class="detalle">${item.talle ? "Talle " + escapeHtml(item.talle) : ""}</div>
+            <div class="detalle">${colorHtml(item)}</div>
             <div class="detalle">${formatearPrecio(item.precio)} c/u</div>
             <div class="cantidad-controles">
               <button data-acc="menos" data-idx="${idx}">-</button>
@@ -244,6 +223,7 @@
       const items = carrito.map((i) => ({
         producto_id: i.producto_id,
         talle: i.talle,
+        color: i.color,
         cantidad: i.cantidad,
       }));
 
@@ -277,6 +257,163 @@
     });
   }
 
+  // ---------- Ficha de producto ----------
+
+  function idDesdeURL() {
+    const sp = new URLSearchParams(location.search);
+    const q = sp.get("id");
+    if (q && /^\d+$/.test(q)) return parseInt(q, 10);
+    const seg = location.pathname.split("/").filter(Boolean);
+    const ultimo = seg[seg.length - 1];
+    if (/^\d+$/.test(ultimo)) return parseInt(ultimo, 10);
+    return null;
+  }
+
+  function coloresHtml(colores, nombrePorHex) {
+    return colores
+      .map((hex) => {
+        const nombre = nombrePorHex[hex.toLowerCase()] || hex;
+        return `<button class="swatch" data-hex="${hex}" data-nombre="${escapeHtml(nombre)}" title="${escapeHtml(nombre)}" style="background:${hex}"></button>`;
+      })
+      .join("");
+  }
+
+  async function initProducto() {
+    const cont = $("#producto");
+    if (!cont) return;
+
+    const id = idDesdeURL();
+    if (id === null) {
+      cont.innerHTML = `<div class="producto-vacio"><p>Producto no encontrado.</p></div>`;
+      return;
+    }
+
+    let nombrePorHex = {};
+    try {
+      const cr = await fetch("/api/colores");
+      const cd = await cr.json();
+      (cd.colores || []).forEach((c) => (nombrePorHex[c.hex.toLowerCase()] = c.nombre));
+    } catch (e) {}
+
+    const res = await fetch(`/api/productos/${id}`);
+    const data = await res.json();
+    if (!res.ok) {
+      cont.innerHTML = `<div class="producto-vacio"><p>${escapeHtml(data.error || "Producto no encontrado.")}</p></div>`;
+      return;
+    }
+    const p = data.producto;
+
+    const imagenes = (p.imagenes && p.imagenes.length) ? p.imagenes : (p.imagen ? [p.imagen] : []);
+    const talles = p.talles || [];
+    const colores = p.colores || [];
+    let seleccion = { talle: null, color: null };
+
+    cont.innerHTML = `
+      <div class="producto-ficha">
+        <div class="producto-galeria">
+          <div class="galeria-principal ${imagenes.length ? "" : "sin-imagen"}">
+            ${
+              imagenes.length
+                ? `<img id="galeria-img" src="/api/img/${encodeURIComponent(imagenes[0])}" alt="${escapeHtml(p.nombre)}">`
+                : "<span>Sin imagen</span>"
+            }
+          </div>
+          ${
+            imagenes.length > 1
+              ? `<div class="galeria-mini" id="galeria-mini">${imagenes
+                  .map(
+                    (img, i) =>
+                      `<img src="/api/img/${encodeURIComponent(img)}" alt="" data-i="${i}" class="${i === 0 ? "activa" : ""}">`
+                  )
+                  .join("")}</div>`
+              : ""
+          }
+        </div>
+        <div class="producto-info">
+          <div class="producto-categoria">${escapeHtml(p.categoria || "")}</div>
+          <h1 class="producto-nombre">${escapeHtml(p.nombre)}</h1>
+          <div class="producto-precio">${formatearPrecio(p.precio)}</div>
+          ${p.descripcion ? `<p class="producto-descripcion">${escapeHtml(p.descripcion)}</p>` : ""}
+          ${
+            talles.length
+              ? `<div class="producto-opciones">
+                  <div class="opciones-etiqueta">Talle</div>
+                  <div class="selector-grupo">${talles
+                    .map((t) => `<button class="talle-btn" data-valor="${escapeHtml(t)}">${escapeHtml(t)}</button>`)
+                    .join("")}</div>
+                </div>`
+              : ""
+          }
+          ${
+            colores.length
+              ? `<div class="producto-opciones">
+                  <div class="opciones-etiqueta">Color</div>
+                  <div class="selector-grupo">${coloresHtml(colores, nombrePorHex)}</div>
+                </div>`
+              : ""
+          }
+          <button class="btn btn-block ${p.stock > 0 ? "" : "sin-stock"}" id="btn-agregar" ${p.stock > 0 ? "" : "disabled"}>
+            ${p.stock > 0 ? "Agregar al carrito" : "Sin stock"}
+          </button>
+          <div class="producto-acciones">
+            <a href="/" class="link-btn">Volver al catálogo</a>
+            <a class="link-btn" id="compartir-wa" target="_blank" rel="noopener">Compartir por WhatsApp</a>
+          </div>
+        </div>
+      </div>`;
+
+    $$("#galeria-mini img").forEach((img) => {
+      img.addEventListener("click", () => {
+        $$("#galeria-mini img").forEach((m) => m.classList.remove("activa"));
+        img.classList.add("activa");
+        $("#galeria-img").src = img.src;
+      });
+    });
+
+    const talleBtns = $$("#producto .talle-btn");
+    talleBtns.forEach((b) =>
+      b.addEventListener("click", () => {
+        seleccion.talle = b.dataset.valor;
+        talleBtns.forEach((x) => x.classList.remove("activo"));
+        b.classList.add("activo");
+      })
+    );
+
+    const swatches = $$("#producto .swatch");
+    swatches.forEach((b) =>
+      b.addEventListener("click", () => {
+        seleccion.color = { hex: b.dataset.hex, nombre: b.dataset.nombre };
+        swatches.forEach((x) => x.classList.remove("activo"));
+        b.classList.add("activo");
+      })
+    );
+
+    const wa = $("#compartir-wa");
+    if (wa) {
+      wa.href = `https://wa.me/?text=${encodeURIComponent(
+        `${p.nombre} - ${formatearPrecio(p.precio)}\n${location.href}`
+      )}`;
+    }
+
+    $("#btn-agregar").addEventListener("click", () => {
+      if (p.stock <= 0) return;
+      if (talles.length && !seleccion.talle) {
+        alert("Elegí un talle primero.");
+        return;
+      }
+      if (colores.length && !seleccion.color) {
+        alert("Elegí un color primero.");
+        return;
+      }
+      agregarAlCarrito(p, seleccion.talle, seleccion.color);
+    });
+
+    const migaIni = $("#miga-categoria");
+    const migaFin = $("#miga-producto");
+    if (migaIni) migaIni.textContent = p.categoria ? ` / ${p.categoria}` : "";
+    if (migaFin) migaFin.textContent = ` / ${p.nombre}`;
+  }
+
   function init() {
     actualizarContador();
     const anio = $("#anio");
@@ -288,6 +425,9 @@
     if (document.getElementById("carrito-contenido")) {
       renderizarCarrito();
       initCarrito();
+    }
+    if (document.getElementById("producto")) {
+      initProducto();
     }
   }
 

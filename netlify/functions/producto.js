@@ -4,26 +4,42 @@ import { json } from "../../lib/responder.js";
 
 export default async (req) => {
   const url = new URL(req.url);
-  const id = Number(url.pathname.split("/").pop());
-  if (!Number.isInteger(id)) return json({ error: "ID inválido" }, 400);
+  // Netlify dev resuelve distintas variantes de una misma URL al buscar
+  // archivos estáticos ('/7.html', '/7.htm', '/7/index.html'). Tomamos el
+  // primer segmento numérico después de 'productos' para obtener el id.
+  const partes = url.pathname.split("/").filter(Boolean);
+  const idx = partes.indexOf("productos") + 1;
+  const segmento = idx > 0 ? partes[idx] : "";
+  const base = segmento.replace(/\.[a-z]+$/i, "");
+  const id = Number(base);
+  if (!segmento || !Number.isInteger(id) || String(id) !== base) {
+    return json({ error: "ID inválido" }, 400);
+  }
+
+  // Detalle de producto: lectura pública (la usa la ficha /producto/:id)
+  const productos = await leerProductos();
+  const producto = productos.find((p) => p.id === id);
+  if (req.method === "GET") {
+    if (!producto) return json({ error: "Producto no encontrado" }, 404);
+    return json({ producto });
+  }
+
+  if (!producto) return json({ error: "Producto no encontrado" }, 404);
 
   const noAutorizado = await exigirAdmin(req);
   if (noAutorizado) return noAutorizado;
 
-  const productos = await leerProductos();
-
   if (req.method === "PUT") {
-    const producto = productos.find((p) => p.id === id);
-    if (!producto) return json({ error: "Producto no encontrado" }, 404);
-
     const data = await req.json().catch(() => ({}));
     const aplicar = (clave, valor) => {
-      if (clave === "talles") producto.talles = Array.isArray(valor) ? valor : [];
+      if (clave === "talles") producto.talles = Array.isArray(valor) ? valor.filter(Boolean) : [];
+      else if (clave === "colores") producto.colores = Array.isArray(valor) ? valor.filter(Boolean) : [];
+      else if (clave === "imagenes") producto.imagenes = Array.isArray(valor) ? valor.filter(Boolean) : [];
       else if (clave === "precio") producto.precio = Number(valor) || 0;
       else if (clave === "stock") producto.stock = Number(valor) || 0;
       else producto[clave] = String(valor ?? "").trim();
     };
-    ["nombre", "categoria", "precio", "stock", "talles", "imagen", "descripcion"].forEach(
+    ["nombre", "categoria", "precio", "stock", "talles", "colores", "imagenes", "descripcion"].forEach(
       (campo) => {
         if (campo in data) aplicar(campo, data[campo]);
       }
@@ -44,5 +60,5 @@ export default async (req) => {
 
 export const config = {
   path: "/api/productos/*",
-  method: ["PUT", "DELETE"],
+  method: ["GET", "PUT", "DELETE"],
 };

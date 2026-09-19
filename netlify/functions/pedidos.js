@@ -50,6 +50,8 @@ export default async (req) => {
         producto_id: producto.id,
         nombre: producto.nombre,
         talle: (item.talle ?? "").trim(),
+        color: (item.color?.hex ?? "").trim(),
+        color_nombre: (item.color?.nombre ?? "").trim(),
         cantidad,
         precio_unitario: producto.precio,
       });

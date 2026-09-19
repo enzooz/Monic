@@ -153,6 +153,14 @@ a {
   display: flex;
   flex-direction: column;
 }
+.tarjeta-link {
+  display: flex;
+  flex-direction: column;
+  transition: opacity 0.2s;
+}
+.tarjeta-link:hover {
+  opacity: 0.85;
+}
 .tarjeta-imagen {
   aspect-ratio: 3 / 4;
   background: var(--gris-claro);
@@ -220,6 +228,155 @@ a {
   background: var(--negro);
   color: var(--blanco);
   border-color: var(--negro);
+}
+
+/* ---------- Swatches de color ---------- */
+.selector-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--borde);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s;
+}
+.swatch:hover {
+  border-color: var(--gris-oscuro);
+}
+.swatch.activo {
+  border-color: var(--negro);
+  outline: 2px solid var(--negro);
+  outline-offset: 2px;
+}
+.mini-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--borde);
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.mini-swatch-mas {
+  font-size: 0.75rem;
+  color: var(--gris-oscuro);
+}
+
+/* ---------- Ficha de producto ---------- */
+.miga {
+  font-size: 0.8rem;
+  color: var(--gris);
+  margin-bottom: 24px;
+  letter-spacing: 0.5px;
+}
+.miga a:hover {
+  color: var(--negro);
+}
+.producto-vacio {
+  text-align: center;
+  padding: 80px 0 40px;
+  color: var(--gris);
+}
+.producto-ficha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+.producto-galeria {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.galeria-principal {
+  aspect-ratio: 3 / 4;
+  background: var(--gris-claro);
+  overflow: hidden;
+}
+.galeria-principal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.galeria-principal.sin-imagen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gris);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.galeria-mini {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.galeria-mini img {
+  width: 72px;
+  height: 96px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 2px solid transparent;
+  opacity: 0.75;
+  transition: all 0.15s;
+}
+.galeria-mini img:hover {
+  opacity: 1;
+}
+.galeria-mini img.activa {
+  border-color: var(--negro);
+  opacity: 1;
+}
+.producto-info {
+  display: flex;
+  flex-direction: column;
+}
+.producto-categoria {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gris);
+  margin-bottom: 6px;
+}
+.producto-nombre {
+  font-weight: 500;
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+}
+.producto-precio {
+  font-size: 1.4rem;
+  margin-bottom: 18px;
+}
+.producto-descripcion {
+  color: var(--gris-oscuro);
+  line-height: 1.5;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+.producto-opciones {
+  margin-bottom: 22px;
+}
+.opciones-etiqueta {
+  font-size: 0.85rem;
+  color: var(--gris-oscuro);
+  margin-bottom: 8px;
+}
+#btn-agregar {
+  margin-top: 6px;
+}
+#btn-agregar.sin-stock {
+  opacity: 0.5;
+}
+.producto-acciones {
+  display: flex;
+  gap: 24px;
+  margin-top: 16px;
 }
 
 /* ---------- Botones ---------- */
@@ -506,6 +663,75 @@ a {
   margin-top: 12px;
   display: block;
 }
+.upload-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.upload-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 88px;
+}
+.upload-item img {
+  width: 88px;
+  height: 117px;
+  object-fit: cover;
+  background: var(--gris-claro);
+  border: 1px solid var(--borde);
+}
+.upload-item .link-btn {
+  font-size: 0.75rem;
+}
+
+/* Pestaña Colores (admin) */
+.color-form {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.color-form .btn {
+  max-width: 180px;
+}
+.color-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.color-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borde);
+}
+.color-item .swatch {
+  width: 30px;
+  height: 30px;
+  cursor: default;
+}
+.color-item-nombre {
+  font-weight: 500;
+  min-width: 120px;
+}
+.color-item-hex {
+  color: var(--gris);
+  font-size: 0.85rem;
+  flex: 1;
+}
+
+/* Pestaña Colores (modal producto) */
+#colores-producto {
+  min-height: 34px;
+}
+#colores-producto:empty::after {
+  content: "No hay colores en el palet. Definelos en la pestaña Colores.";
+  color: var(--gris);
+  font-size: 0.85rem;
+}
 
 /* Modal */
 .modal-fondo {
@@ -549,6 +775,12 @@ a {
 }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .producto-ficha {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
 @media (max-width: 720px) {
   .form-fila {
     grid-template-columns: 1fr;

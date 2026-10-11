@@ -1,5 +1,10 @@
 import { exigirAdmin } from "../../lib/auth.js";
-import { leerProductos, guardarProductos } from "../../lib/datos.js";
+import {
+  leerProductos,
+  guardarProductos,
+  agregarMovimientos,
+  normalizarStock,
+} from "../../lib/datos.js";
 import { json } from "../../lib/responder.js";
 
 export default async (req) => {
@@ -31,21 +36,56 @@ export default async (req) => {
 
   if (req.method === "PUT") {
     const data = await req.json().catch(() => ({}));
+    const stockAnterior = { ...producto.stock };
+
     const aplicar = (clave, valor) => {
       if (clave === "talles") producto.talles = Array.isArray(valor) ? valor.filter(Boolean) : [];
       else if (clave === "colores") producto.colores = Array.isArray(valor) ? valor.filter(Boolean) : [];
       else if (clave === "imagenes") producto.imagenes = Array.isArray(valor) ? valor.filter(Boolean) : [];
       else if (clave === "precio") producto.precio = Number(valor) || 0;
-      else if (clave === "stock") producto.stock = Number(valor) || 0;
+      else if (clave === "codigo") producto.codigo = String(valor ?? "").trim() || "NOM0000";
+      else if (clave === "stock") producto.stock = normalizarStock(valor, producto.talles);
       else producto[clave] = String(valor ?? "").trim();
     };
-    ["nombre", "categoria", "precio", "stock", "talles", "colores", "imagenes", "descripcion"].forEach(
+    ["nombre", "categoria", "marca", "codigo", "precio", "stock", "talles", "colores", "imagenes", "descripcion"].forEach(
       (campo) => {
         if (campo in data) aplicar(campo, data[campo]);
       }
     );
 
+    // Si cambiaron los talles, realineamos el stock a los nuevos talles.
+    producto.stock = normalizarStock(producto.stock, producto.talles);
+
+    // La clave debe ser única entre productos.
+    const codigo = (producto.codigo || "").trim() || "NOM0000";
+    producto.codigo = codigo;
+    const repetido = productos.some(
+      (p) => p.id !== id && (p.codigo || "").trim().toLowerCase() === codigo.toLowerCase()
+    );
+    if (repetido) return json({ error: `La clave '${codigo}' ya está en uso` }, 400);
+
     await guardarProductos(productos);
+
+    // Registra un movimiento por cada talle cuyo stock cambió en la edición.
+    const movimientos = [];
+    const claves = new Set([...Object.keys(stockAnterior), ...Object.keys(producto.stock)]);
+    claves.forEach((talle) => {
+      const antes = stockAnterior[talle] ?? 0;
+      const ahora = producto.stock[talle] ?? 0;
+      if (antes !== ahora) {
+        movimientos.push({
+          producto_id: producto.id,
+          producto_nombre: producto.nombre,
+          talle,
+          tipo: "ajuste",
+          motivo: "Edición de producto",
+          delta: ahora - antes,
+          stock_resultante: ahora,
+        });
+      }
+    });
+    if (movimientos.length) await agregarMovimientos(movimientos);
+
     return json({ ok: true, producto });
   }
 

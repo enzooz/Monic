@@ -39,6 +39,9 @@
     <div class="admin-layout">
       <aside class="admin-sidebar">
         <a href="#productos" data-vista="productos" class="activo">Productos</a>
+        <a href="#stock" data-vista="stock">Stock</a>
+        <a href="#movimientos" data-vista="movimientos">Movimientos</a>
+        <a href="#marcas" data-vista="marcas">Marcas</a>
         <a href="#colores" data-vista="colores">Colores</a>
         <a href="#pedidos" data-vista="pedidos">Pedidos</a>
         <a href="#" id="btn-logout">Cerrar sesión</a>
@@ -56,6 +59,8 @@
                 <th>Imagen</th>
                 <th>Nombre</th>
                 <th>Categoría</th>
+                <th>Marca</th>
+                <th>Código</th>
                 <th>Precio</th>
                 <th>Stock</th>
                 <th>Talles</th>
@@ -68,6 +73,88 @@
           <div class="vacio" id="productos-vacio-admin" style="display:none;">
             <p>No hay productos. Agregá el primero.</p>
           </div>
+        </div>
+
+        <div id="vista-stock" style="display:none;">
+          <div class="admin-cabecera">
+            <h2>Stock</h2>
+            <div class="umbral-control">
+              <label for="umbral-stock">Alerta de stock bajo ≤</label>
+              <input type="number" id="umbral-stock" min="0" value="3" />
+            </div>
+          </div>
+          <div id="mensaje-stock"></div>
+
+          <div id="alerta-stock" class="alerta-stock" style="display:none;"></div>
+
+          <h3 class="subtitulo">Productos</h3>
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Stock por talle</th>
+                <th>Total</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-stock"></tbody>
+          </table>
+          <div class="vacio" id="stock-vacio-admin" style="display:none;">
+            <p>No hay productos. Agregalos desde la pestaña Productos.</p>
+          </div>
+        </div>
+
+        <div id="vista-movimientos" style="display:none;">
+          <div class="admin-cabecera">
+            <h2>Movimientos</h2>
+            <div class="filtros-mov">
+              <select id="filtro-mov-producto"><option value="">Todos los productos</option></select>
+              <select id="filtro-mov-tipo">
+                <option value="">Todos los tipos</option>
+                <option value="alta">Alta</option>
+                <option value="venta">Venta</option>
+                <option value="reposicion">Reposición</option>
+                <option value="ajuste">Ajuste</option>
+                <option value="merma">Merma</option>
+                <option value="devolucion">Devolución</option>
+              </select>
+            </div>
+          </div>
+          <table class="tabla" id="tabla-movimientos">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Talle</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Stock</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="vacio" id="movimientos-vacio-admin" style="display:none;">
+            <p>No hay movimientos todavía.</p>
+          </div>
+        </div>
+
+        <div id="vista-marcas" style="display:none;">
+          <div class="admin-cabecera">
+            <h2>Marcas</h2>
+          </div>
+          <div id="mensaje-marcas"></div>
+          <div class="color-form">
+            <div class="form-fila">
+              <div class="form-grupo">
+                <label for="marca-nombre">Nombre de la marca</label>
+                <input type="text" id="marca-nombre" placeholder="Ej. Nike" />
+              </div>
+            </div>
+            <button class="btn" id="btn-agregar-marca">Agregar marca</button>
+          </div>
+          <div class="marca-lista" id="lista-marcas"></div>
         </div>
 
         <div id="vista-colores" style="display:none;">
@@ -142,19 +229,27 @@
             <datalist id="lista-categorias"></datalist>
           </div>
           <div class="form-grupo">
-            <label for="producto-precio">Precio ($)</label>
-            <input type="number" id="producto-precio" min="0" step="0.01" />
+            <label for="producto-marca">Marca</label>
+            <select id="producto-marca"></select>
           </div>
         </div>
         <div class="form-fila">
           <div class="form-grupo">
-            <label for="producto-stock">Stock</label>
-            <input type="number" id="producto-stock" min="0" />
+            <label for="producto-codigo">Código / Clave</label>
+            <input type="text" id="producto-codigo" placeholder="NOM0000" />
           </div>
           <div class="form-grupo">
-            <label for="producto-talles">Talles (separados por coma)</label>
-            <input type="text" id="producto-talles" placeholder="S, M, L, XL" />
+            <label for="producto-precio">Precio ($)</label>
+            <input type="number" id="producto-precio" min="0" step="0.01" />
           </div>
+        </div>
+        <div class="form-grupo">
+          <label for="producto-talles">Talles (separados por coma)</label>
+          <input type="text" id="producto-talles" placeholder="S, M, L, XL" />
+        </div>
+        <div class="form-grupo">
+          <label>Stock por talle</label>
+          <div class="stock-editor" id="stock-editor"></div>
         </div>
         <div class="form-grupo">
           <label>Colores (del palet)</label>
@@ -167,6 +262,42 @@
         <div class="modal-acciones">
           <button type="button" class="btn btn-outline" id="modal-cancelar">Cancelar</button>
           <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-fondo" id="modal-stock">
+    <div class="modal modal-chico">
+      <h3 id="modal-titulo-stock">Ajustar stock</h3>
+      <div id="mensaje-modal-stock"></div>
+      <div class="stock-actual" id="stock-actual-info"></div>
+      <form id="form-stock">
+        <input type="hidden" id="stock-producto-id" />
+        <div class="form-grupo" id="stock-talle-grupo">
+          <label for="stock-talle">Talle</label>
+          <select id="stock-talle"></select>
+        </div>
+        <div class="form-grupo">
+          <label for="stock-operacion">Operación</label>
+          <select id="stock-operacion">
+            <option value="reposicion">Reponer (+)</option>
+            <option value="ajuste">Ajustar inventario (fijar)</option>
+            <option value="merma">Merma (-)</option>
+            <option value="devolucion">Devolución (+)</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label for="stock-cantidad" id="stock-cantidad-label">Cantidad</label>
+          <input type="number" id="stock-cantidad" min="0" step="1" value="0" />
+        </div>
+        <div class="form-grupo">
+          <label for="stock-motivo">Motivo (opcional)</label>
+          <input type="text" id="stock-motivo" placeholder="Ej. Ingreso de mercadería" />
+        </div>
+        <div class="modal-acciones">
+          <button type="button" class="btn btn-outline" id="modal-stock-cancelar">Cancelar</button>
+          <button type="submit" class="btn">Aplicar</button>
         </div>
       </form>
     </div>

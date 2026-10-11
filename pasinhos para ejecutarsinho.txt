@@ -1,0 +1,35 @@
+PASINHOS PARA EJECUTARSHINHO
+============================
+
+1) Abri PowerShell.
+
+2) Entra a la carpeta del proyecto:
+   cd "C:\Users\ryrco\Desktop\Programación\Proyectos\Monic"
+
+3) Arranca el servidor local (usar .cmd por la politica de ejecucion):
+   npm.cmd start
+
+4) Espera a que aparezca en la consola:
+   Local dev server ready: http://localhost:8888
+
+5) Abri el navegador en:
+   - Tienda: http://localhost:8888
+   - Admin:  http://localhost:8888/admin
+     Usuario:  admin
+     Contraseña: monic123
+
+6) Para frenarlo: Ctrl + C en la consola.
+
+
+OPCIONAL: usar "npm start" normal en esta sesion de PowerShell
+--------------------------------------------------------------
+Repository primero:
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   npm start
+
+(Solo afecta la sesion actual, no cambia nada permanente.)
+
+
+OPCIONAL: correr sin npm
+------------------------
+   node_modules\.bin\netlify.cmd dev

@@ -47,12 +47,15 @@ Monic/
 ├── netlify.toml          # Configuración de build, publish y redirects
 ├── package.json          # Dependencias de runtime y netlify-cli
 ├── lib/                  # Lógica compartida de las funciones
-│   ├── datos.js          # Blobs: productos, pedidos, validaciones
+│   ├── datos.js          # Blobs: productos (stock por talle, marca, código), pedidos, movimientos, marcas, validaciones
 │   ├── auth.js           # Sesión admin (cookie firmada HMAC)
 │   └── responder.js      # Helper de respuestas JSON
 ├── netlify/functions/    # API (backend)
 │   ├── productos.js      # GET/POST /api/productos
 │   ├── producto.js       # PUT/DELETE /api/productos/*
+│   ├── stock.js          # POST /api/stock (reponer/ajustar/merma)
+│   ├── movimientos.js    # GET /api/movimientos (historial)
+│   ├── marcas.js         # GET/POST/DELETE /api/marcas (lista de marcas)
 │   ├── pedidos.js        # POST público + GET admin /api/pedidos
 │   ├── categorias.js     # GET /api/categorias
 │   ├── upload.js         # POST /api/upload (imágenes admin)
@@ -86,4 +89,5 @@ Monic/
 ## Panel de administración
 
 - `/admin` — Login con `MONIC_ADMIN_USER` / `MONIC_ADMIN_PASS`
-- Permite agregar, editar y eliminar productos (con subida de imágenes) y ver pedidos recibidos
+- Permite agregar, editar y eliminar productos (con subida de imágenes, marca y código/clave única), gestionar el stock **por talle** (reponer, ajustar, merma, devolución), administrar las **marcas**, ver el historial de movimientos y consultar los pedidos recibidos
+- La pestaña **Stock** muestra alertas de stock bajo (umbral configurable, por defecto 3) y la pestaña **Movimientos** el historial filtrable por producto y tipo

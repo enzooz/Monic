@@ -4,9 +4,11 @@ import {
   guardarProductos,
   leerPedidos,
   guardarPedidos,
+  agregarMovimientos,
   validarCliente,
   esHoneypot,
   fechaLocalAR,
+  stockDe,
 } from "../../lib/datos.js";
 import { json } from "../../lib/responder.js";
 
@@ -29,6 +31,7 @@ export default async (req) => {
 
     const productos = await leerProductos();
     const itemsValidos = [];
+    const movimientos = [];
     let total = 0;
 
     for (const item of items) {
@@ -37,26 +40,48 @@ export default async (req) => {
 
       const cantidad = Math.floor(Number(item?.cantidad)) || 0;
       if (cantidad <= 0) return json({ error: "Cantidad inválida" }, 400);
-      if (cantidad > producto.stock) {
+
+      const talles = producto.talles || [];
+      const talle = (item.talle ?? "").trim();
+      if (talles.length) {
+        if (!talle || !talles.includes(talle)) {
+          return json({ error: `Elegí un talle válido de '${producto.nombre}'` }, 400);
+        }
+      }
+
+      const clave = talles.length ? talle : "";
+      const disponible = stockDe(producto, clave);
+      if (cantidad > disponible) {
         return json(
           {
-            error: `Stock insuficiente de '${producto.nombre}' (disponible: ${producto.stock})`,
+            error: `Stock insuficiente de '${producto.nombre}'${
+              clave ? ` (talle ${clave})` : ""
+            } (disponible: ${disponible})`,
           },
           400
         );
       }
 
+      producto.stock[clave] = disponible - cantidad;
+
       itemsValidos.push({
         producto_id: producto.id,
         nombre: producto.nombre,
-        talle: (item.talle ?? "").trim(),
+        talle: clave,
         color: (item.color?.hex ?? "").trim(),
         color_nombre: (item.color?.nombre ?? "").trim(),
         cantidad,
         precio_unitario: producto.precio,
       });
+      movimientos.push({
+        producto_id: producto.id,
+        producto_nombre: producto.nombre,
+        talle: clave,
+        tipo: "venta",
+        delta: -cantidad,
+        stock_resultante: producto.stock[clave],
+      });
       total += producto.precio * cantidad;
-      producto.stock -= cantidad;
     }
 
     await guardarProductos(productos);
@@ -72,6 +97,11 @@ export default async (req) => {
     };
     pedidos.push(pedido);
     await guardarPedidos(pedidos);
+
+    await agregarMovimientos(
+      movimientos.map((m) => ({ ...m, motivo: `Venta (pedido #${nuevoId})` }))
+    );
+
     return json({ ok: true, pedido }, 201);
   }
 

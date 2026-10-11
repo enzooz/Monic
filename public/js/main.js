@@ -96,9 +96,12 @@
 
     cont.innerHTML = lista.map((p) => {
       const img = (p.imagenes && p.imagenes[0]) || p.imagen || "";
+      const agotado = stockTotal(p) <= 0;
       return `
         <a class="tarjeta-link" href="/producto/${p.id}">
-          <div class="tarjeta-imagen ${img ? "" : "sin-imagen"}">${imagenProducto(p)}</div>
+          <div class="tarjeta-imagen ${img ? "" : "sin-imagen"}">${imagenProducto(p)}${
+            agotado ? '<span class="tarjeta-agotado">Sin stock</span>' : ""
+          }</div>
           <div class="tarjeta-categoria">${escapeHtml(p.categoria || "—")}</div>
           <div class="tarjeta-nombre">${escapeHtml(p.nombre)}</div>
           <div class="tarjeta-precio">${formatearPrecio(p.precio)}</div>
@@ -106,7 +109,18 @@
     }).join("");
   }
 
+  function stockDisponible(producto, talle) {
+    return producto.talles && producto.talles.length
+      ? stockDe(producto, talle)
+      : stockTotal(producto);
+  }
+
   function agregarAlCarrito(producto, talle, color) {
+    const disponible = stockDisponible(producto, talle);
+    if (disponible <= 0) {
+      mostrarToast("No hay stock disponible");
+      return;
+    }
     const carrito = obtenerCarrito();
     const colorHex = color && color.hex ? color.hex : "";
     const existente = carrito.find(
@@ -116,6 +130,10 @@
         (i.color && i.color.hex ? i.color.hex : "") === colorHex
     );
     if (existente) {
+      if (existente.cantidad + 1 > disponible) {
+        mostrarToast("No hay más stock disponible");
+        return;
+      }
       existente.cantidad += 1;
     } else {
       carrito.push({
@@ -330,6 +348,7 @@
           }
         </div>
         <div class="producto-info">
+          ${p.marca ? `<div class="producto-marca">${escapeHtml(p.marca)}</div>` : ""}
           <div class="producto-categoria">${escapeHtml(p.categoria || "")}</div>
           <h1 class="producto-nombre">${escapeHtml(p.nombre)}</h1>
           <div class="producto-precio">${formatearPrecio(p.precio)}</div>
@@ -339,7 +358,14 @@
               ? `<div class="producto-opciones">
                   <div class="opciones-etiqueta">Talle</div>
                   <div class="selector-grupo">${talles
-                    .map((t) => `<button class="talle-btn" data-valor="${escapeHtml(t)}">${escapeHtml(t)}</button>`)
+                    .map((t) => {
+                      const n = stockDe(p, t);
+                      return `<button class="talle-btn ${n <= 0 ? "agotado" : ""}" data-valor="${escapeHtml(
+                        t
+                      )}" ${n <= 0 ? "disabled" : ""} title="${n <= 0 ? "Sin stock" : n + " disponibles"}">${escapeHtml(
+                        t
+                      )}</button>`;
+                    })
                     .join("")}</div>
                 </div>`
               : ""
@@ -352,9 +378,7 @@
                 </div>`
               : ""
           }
-          <button class="btn btn-block ${p.stock > 0 ? "" : "sin-stock"}" id="btn-agregar" ${p.stock > 0 ? "" : "disabled"}>
-            ${p.stock > 0 ? "Agregar al carrito" : "Sin stock"}
-          </button>
+          <button class="btn btn-block" id="btn-agregar">Agregar al carrito</button>
           <div class="producto-acciones">
             <a href="/" class="link-btn">Volver al catálogo</a>
             <a class="link-btn" id="compartir-wa" target="_blank" rel="noopener">Compartir por WhatsApp</a>
@@ -370,12 +394,35 @@
       });
     });
 
+    const btnAgregar = $("#btn-agregar");
+    function actualizarBotonAgregar() {
+      let disponible = null;
+      let label = "Agregar al carrito";
+      if (talles.length) {
+        if (!seleccion.talle) {
+          label = "Elegí un talle";
+        } else {
+          disponible = stockDe(p, seleccion.talle);
+          label = disponible > 0 ? "Agregar al carrito" : "Sin stock";
+        }
+      } else {
+        disponible = stockTotal(p);
+        label = disponible > 0 ? "Agregar al carrito" : "Sin stock";
+      }
+      const sinStock = disponible !== null && disponible <= 0;
+      btnAgregar.textContent = label;
+      btnAgregar.disabled = sinStock;
+      btnAgregar.classList.toggle("sin-stock", sinStock);
+    }
+
     const talleBtns = $$("#producto .talle-btn");
     talleBtns.forEach((b) =>
       b.addEventListener("click", () => {
+        if (b.disabled) return;
         seleccion.talle = b.dataset.valor;
         talleBtns.forEach((x) => x.classList.remove("activo"));
         b.classList.add("activo");
+        actualizarBotonAgregar();
       })
     );
 
@@ -395,8 +442,8 @@
       )}`;
     }
 
-    $("#btn-agregar").addEventListener("click", () => {
-      if (p.stock <= 0) return;
+    actualizarBotonAgregar();
+    btnAgregar.addEventListener("click", () => {
       if (talles.length && !seleccion.talle) {
         alert("Elegí un talle primero.");
         return;
@@ -406,6 +453,7 @@
         return;
       }
       agregarAlCarrito(p, seleccion.talle, seleccion.color);
+      actualizarBotonAgregar();
     });
 
     const migaIni = $("#miga-categoria");

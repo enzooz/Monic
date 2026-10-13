@@ -41,6 +41,7 @@
         <a href="#productos" data-vista="productos" class="activo">Productos</a>
         <a href="#stock" data-vista="stock">Stock</a>
         <a href="#movimientos" data-vista="movimientos">Movimientos</a>
+        <a href="#categorias" data-vista="categorias">Categorías</a>
         <a href="#marcas" data-vista="marcas">Marcas</a>
         <a href="#colores" data-vista="colores">Colores</a>
         <a href="#pedidos" data-vista="pedidos">Pedidos</a>
@@ -57,12 +58,12 @@
             <thead>
               <tr>
                 <th>Imagen</th>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Marca</th>
-                <th>Código</th>
-                <th>Precio</th>
-                <th>Stock</th>
+                <th class="th-ordenable" data-sort="nombre">Nombre</th>
+                <th class="th-ordenable" data-sort="categoria">Categoría</th>
+                <th class="th-ordenable" data-sort="marca">Marca</th>
+                <th class="th-ordenable" data-sort="codigo">Código</th>
+                <th class="th-ordenable" data-sort="precio">Precio</th>
+                <th class="th-ordenable" data-sort="stock">Stock</th>
                 <th>Talles</th>
                 <th>Colores</th>
                 <th>Acciones</th>
@@ -91,10 +92,10 @@
           <table class="tabla">
             <thead>
               <tr>
-                <th>Producto</th>
+                <th class="th-ordenable" data-sort="nombre">Producto</th>
                 <th>Categoría</th>
                 <th>Stock por talle</th>
-                <th>Total</th>
+                <th class="th-ordenable" data-sort="stock">Total</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -138,6 +139,23 @@
           <div class="vacio" id="movimientos-vacio-admin" style="display:none;">
             <p>No hay movimientos todavía.</p>
           </div>
+        </div>
+
+        <div id="vista-categorias" style="display:none;">
+          <div class="admin-cabecera">
+            <h2>Categorías</h2>
+          </div>
+          <div id="mensaje-categorias"></div>
+          <div class="color-form">
+            <div class="form-fila">
+              <div class="form-grupo">
+                <label for="categoria-nombre">Nombre de la categoría</label>
+                <input type="text" id="categoria-nombre" placeholder="Ej. Remeras" />
+              </div>
+            </div>
+            <button class="btn" id="btn-agregar-categoria">Agregar categoría</button>
+          </div>
+          <div class="marca-lista" id="lista-categorias-admin"></div>
         </div>
 
         <div id="vista-marcas" style="display:none;">

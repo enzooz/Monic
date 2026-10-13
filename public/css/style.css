@@ -977,6 +977,25 @@ a {
   padding: 8px 0;
 }
 
+/* ---------- Tablas ordenables ---------- */
+th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+th[data-sort]::after {
+  content: attr(data-flecha);
+  margin-left: 6px;
+  font-size: 0.7rem;
+  color: var(--gris);
+}
+th[data-sort].activo {
+  color: var(--negro);
+}
+th[data-sort].activo::after {
+  color: var(--negro);
+}
+
 /* ---------- Pie ---------- */
 .pie {
   border-top: 1px solid var(--borde);

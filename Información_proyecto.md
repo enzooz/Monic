@@ -44,7 +44,7 @@ Monic/
 ├── public/                   # Sitio estático
 │   ├── index.html            # Catálogo (tarjetas enlazan a la ficha de cada producto)
 │   ├── carrito.html          # Carrito de compras
-│   ├── admin.html            # Panel de administración (Productos · Stock · Movimientos · Marcas · Colores · Pedidos)
+│   ├── admin.html            # Panel de administración (Productos · Stock · Movimientos · Categorías · Marcas · Colores · Pedidos)
 │   ├── producto.html         # Ficha de producto (galería, talle, color, WhatsApp)
 │   ├── css/style.css         # Estilos minimalistas
 │   └── js/
@@ -58,7 +58,7 @@ Monic/
 │   ├── verificar.js          # GET    /api/verificar
 │   ├── productos.js          # GET/POST /api/productos
 │   ├── producto.js           # GET/PUT/DELETE /api/productos/:id
-│   ├── categorias.js         # GET    /api/categorias
+│   ├── categorias.js         # GET/POST/DELETE /api/categorias
 │   ├── colores.js            # GET/POST/DELETE /api/colores (palet global)
 │   ├── marcas.js             # GET/POST/DELETE /api/marcas (lista de marcas)
 │   ├── stock.js              # POST   /api/stock (reponer/ajustar/merma/devolución)
@@ -100,6 +100,7 @@ Monic/
 
 - **Colores:** se guardan como **hex** (`#RRGGBB`). Se eligen desde el palet global (store `datos`, clave `colores`), que administra el panel admin. El palet arranca con blanco `#FFFFFF` y negro `#000000`.
 - **Marca:** texto tomado de la lista global de marcas (store `datos`, clave `marcas`), administrada desde la pestaña **Marcas**. Puede quedar sin marca.
+- **Categoría:** texto libre con autocompletado desde la lista global de categorías (store `datos`, clave `categorias`), administrada desde la pestaña **Categorías**. Puede no tener categoría.
 - **Código / clave:** identificador editable por producto. Si no se carga, queda el valor por defecto `NOM0000`. **Debe ser único** (no se permiten dos productos con la misma clave).
 - **Imágenes:** cada producto puede tener **una o varias**; se guardan en el store `imagenes` de Blobs con nombre único (UUID) y se referencian por ese nombre. La ficha muestra galería con miniaturas; el catálogo/carrito usan la primera.
 - **Stock:** es un objeto **por talle** (`{ talle: cantidad }`). Para productos sin talles se usa la clave vacía `""`. Los productos legacy con stock numérico se migran automáticamente al leerlos (el total se reparte entre los talles, o queda bajo `""` si no hay talles). La cantidad nunca puede ser negativa.
@@ -126,6 +127,17 @@ Cada producto guarda una **copia del hex** en su campo `colores`, así que borra
 ```
 
 Cada producto guarda el **nombre** de la marca en su campo `marca` (no el id), así que renombrar/borrar una marca no rompe productos ya cargados. La lista arranca vacía y se administra desde la pestaña **Marcas**.
+
+### Categorías (store `datos`, clave `categorias`)
+
+```json
+[
+  { "id": "a1b2c3d4-...", "nombre": "Remeras" },
+  { "id": "e5f6a7b8-...", "nombre": "Buzos" }
+]
+```
+
+Cada producto guarda el **nombre** de la categoría en su campo `categoria`. La lista se administra desde la pestaña **Categorías**. La primera vez que se consulta, se **importan** las categorías ya presentes en los productos existentes; a partir de ahí la lista es manual (borrar todas no las vuelve a importar).
 
 ### Movimientos de stock (store `datos`, clave `movimientos`)
 
@@ -205,7 +217,9 @@ Cada producto guarda el **nombre** de la marca en su campo `marca` (no el id), a
 | GET | `/api/productos/:id` | Público | Detalle de un producto (ficha) |
 | PUT | `/api/productos/:id` | Admin | Modificar producto |
 | DELETE | `/api/productos/:id` | Admin | Eliminar producto |
-| GET | `/api/categorias` | Público | Lista de categorías (de los productos existentes) |
+| GET | `/api/categorias` | Público | Lista global de categorías (store `categorias`) |
+| POST | `/api/categorias` | Admin | Agregar categoría `{nombre}` |
+| DELETE | `/api/categorias?id=...` | Admin | Eliminar categoría |
 | GET | `/api/colores` | Público | Palet global de colores (seed blanco/negro si está vacío) |
 | POST | `/api/colores` | Admin | Agregar color al palet `{nombre, hex}` |
 | DELETE | `/api/colores?id=...` | Admin | Eliminar color del palet |

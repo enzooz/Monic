@@ -14,11 +14,19 @@
   let productos = [];
   let paleta = [];
   let marcas = [];
+  let categorias = [];
   let coloresSeleccionados = new Set();
   let imagenesSeleccionadas = [];
   let stockEdicion = {};
   let movimientos = [];
   let umbral = Number(localStorage.getItem("monic_umbral_stock")) || 3;
+  let orden = (() => {
+    try {
+      const g = JSON.parse(localStorage.getItem("monic_orden"));
+      if (g && g.campo) return { campo: g.campo, dir: g.dir === -1 ? -1 : 1 };
+    } catch (e) {}
+    return { campo: null, dir: 1 };
+  })();
 
   function mostrarVista(contenidov) {
     $("#vista-login").style.display = "none";
@@ -26,6 +34,7 @@
     $("#vista-productos").style.display = contenidov === "productos" ? "block" : "none";
     $("#vista-stock").style.display = contenidov === "stock" ? "block" : "none";
     $("#vista-movimientos").style.display = contenidov === "movimientos" ? "block" : "none";
+    $("#vista-categorias").style.display = contenidov === "categorias" ? "block" : "none";
     $("#vista-marcas").style.display = contenidov === "marcas" ? "block" : "none";
     $("#vista-colores").style.display = contenidov === "colores" ? "block" : "none";
     $("#vista-pedidos").style.display = contenidov === "pedidos" ? "block" : "none";
@@ -34,6 +43,7 @@
     );
     if (contenidov === "pedidos") cargarPedidos();
     if (contenidov === "colores") cargarColores();
+    if (contenidov === "categorias") cargarCategorias();
     if (contenidov === "marcas") cargarMarcas();
     if (contenidov === "stock") renderizarStockView();
     if (contenidov === "movimientos") cargarMovimientos();
@@ -46,6 +56,7 @@
       mostrarVista("productos");
       cargarProductos();
       cargarMarcas();
+      cargarCategorias();
     } else {
       $("#vista-login").style.display = "block";
       $("#vista-admin").style.display = "none";
@@ -68,6 +79,7 @@
       mostrarVista("productos");
       cargarProductos();
       cargarMarcas();
+      cargarCategorias();
       $("#form-login").reset();
     } else {
       mostrarMensaje(mensaje, data.error || "No se pudo ingresar.", "error");
@@ -91,9 +103,67 @@
   async function cargarCategorias() {
     const res = await fetch("/api/categorias");
     const data = await res.json();
-    $("#lista-categorias").innerHTML = (data.categorias || [])
-      .map((c) => `<option value="${escapeHtml(c)}"></option>`)
+    categorias = data.categorias || [];
+    renderizarCategoriasLista();
+    renderCategoriasProducto();
+  }
+
+  function renderizarCategoriasLista() {
+    const cont = $("#lista-categorias-admin");
+    if (!cont) return;
+    if (categorias.length === 0) {
+      cont.innerHTML = `<p class="vacio-inline">Todavía no cargaste categorías.</p>`;
+      return;
+    }
+    cont.innerHTML = categorias
+      .map(
+        (c) => `
+        <div class="marca-item">
+          <span class="marca-item-nombre">${escapeHtml(c.nombre)}</span>
+          <button type="button" class="link-btn" data-eliminar-categoria="${c.id}">Eliminar</button>
+        </div>`
+      )
       .join("");
+    cont.querySelectorAll("[data-eliminar-categoria]").forEach((btn) =>
+      btn.addEventListener("click", () => eliminarCategoria(btn.dataset.eliminarCategoria))
+    );
+  }
+
+  function renderCategoriasProducto() {
+    const dl = $("#lista-categorias");
+    if (!dl) return;
+    dl.innerHTML = categorias
+      .map((c) => `<option value="${escapeHtml(c.nombre)}"></option>`)
+      .join("");
+  }
+
+  async function eliminarCategoria(id) {
+    if (!confirm("¿Eliminar esta categoría?")) return;
+    const res = await fetch(`/api/categorias?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const data = await res.json();
+    if (res.ok) {
+      mostrarMensaje($("#mensaje-categorias"), "Categoría eliminada.", "exito");
+      cargarCategorias();
+    } else {
+      mostrarMensaje($("#mensaje-categorias"), data.error || "Error al eliminar.", "error");
+    }
+  }
+
+  async function agregarCategoria() {
+    const mensaje = $("#mensaje-categorias");
+    const res = await fetch("/api/categorias", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre: $("#categoria-nombre").value.trim() }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      mostrarMensaje(mensaje, "Categoría agregada.", "exito");
+      $("#categoria-nombre").value = "";
+      cargarCategorias();
+    } else {
+      mostrarMensaje(mensaje, data.error || "Error al agregar la categoría.", "error");
+    }
   }
 
   function clavesDeProducto(p) {
@@ -110,6 +180,61 @@
       .join(" ");
   }
 
+  // ---------- Ordenamiento ----------
+
+  const CAMPOS_TEXTO = ["nombre", "categoria", "marca", "codigo"];
+
+  function valorOrden(p, campo) {
+    if (campo === "stock") return stockTotal(p);
+    if (campo === "precio") return Number(p.precio) || 0;
+    return String(p[campo] || "").trim();
+  }
+
+  function compararProductos(a, b) {
+    const campo = orden.campo;
+    if (!campo) return 0;
+    if (CAMPOS_TEXTO.includes(campo)) {
+      const va = valorOrden(a, campo);
+      const vb = valorOrden(b, campo);
+      if (!va && !vb) return 0;
+      if (!va) return 1;
+      if (!vb) return -1;
+      return va.localeCompare(vb, "es", { sensitivity: "base" }) * orden.dir;
+    }
+    return (valorOrden(a, campo) - valorOrden(b, campo)) * orden.dir;
+  }
+
+  function ordenarProductos(lista) {
+    if (!orden.campo) return lista;
+    return [...lista].sort(compararProductos);
+  }
+
+  function actualizarFlechas() {
+    $$("th[data-sort]").forEach((th) => {
+      const activo = th.dataset.sort === orden.campo;
+      th.classList.toggle("activo", activo);
+      th.dataset.flecha = activo ? (orden.dir === 1 ? "▲" : "▼") : "";
+    });
+  }
+
+  function inicializarOrden() {
+    $$("th[data-sort]").forEach((th) => {
+      th.addEventListener("click", () => {
+        const campo = th.dataset.sort;
+        if (orden.campo === campo) orden.dir = orden.dir === 1 ? -1 : 1;
+        else {
+          orden.campo = campo;
+          orden.dir = 1;
+        }
+        localStorage.setItem("monic_orden", JSON.stringify(orden));
+        actualizarFlechas();
+        renderizarProductos();
+        renderizarStockView();
+      });
+    });
+    actualizarFlechas();
+  }
+
   function renderizarProductos() {
     const tbody = $("#tabla-productos");
     const vacio = $("#productos-vacio-admin");
@@ -119,7 +244,7 @@
       return;
     }
     vacio.style.display = "none";
-    productos.forEach((p) => {
+    ordenarProductos(productos).forEach((p) => {
       const img = (p.imagenes && p.imagenes[0]) || p.imagen || "";
       const colores = p.colores || [];
       const tr = document.createElement("tr");
@@ -473,7 +598,7 @@
       return;
     }
     vacio.style.display = "none";
-    productos.forEach((p) => {
+    ordenarProductos(productos).forEach((p) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${escapeHtml(p.nombre)}</td>
@@ -757,6 +882,13 @@
         agregarMarca();
       }
     });
+    $("#btn-agregar-categoria").addEventListener("click", agregarCategoria);
+    $("#categoria-nombre").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        agregarCategoria();
+      }
+    });
     $("#form-stock").addEventListener("submit", aplicarStock);
     $("#modal-stock-cancelar").addEventListener("click", cerrarModalStock);
     $("#modal-stock").addEventListener("click", (e) => {
@@ -774,6 +906,7 @@
     });
     initUpload();
     initUmbral();
+    inicializarOrden();
     $("#btn-verificar").addEventListener("click", (e) => {
       e.preventDefault();
       verificarSesion();

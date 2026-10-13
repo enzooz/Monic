@@ -47,7 +47,10 @@ export default async (req) => {
       else if (clave === "stock") producto.stock = normalizarStock(valor, producto.talles);
       else producto[clave] = String(valor ?? "").trim();
     };
-    ["nombre", "categoria", "marca", "codigo", "precio", "stock", "talles", "colores", "imagenes", "descripcion"].forEach(
+    // "talles" va antes que "stock": el stock se normaliza contra los talles finales.
+    // Si se aplicara al revés, cambiar los talles borraría el stock cargado para
+    // los talles nuevos (bug: el stock "se reiniciaba" al editar).
+    ["nombre", "categoria", "marca", "codigo", "precio", "talles", "stock", "colores", "imagenes", "descripcion"].forEach(
       (campo) => {
         if (campo in data) aplicar(campo, data[campo]);
       }
